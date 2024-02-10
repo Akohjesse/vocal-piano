@@ -1,0 +1,14 @@
+bin/
+include/
+lib/
+lib64/
+
+# Bytecode
+__pycache__/
+*.py[cod]
+
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
