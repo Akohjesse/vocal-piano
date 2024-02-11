@@ -1,9 +1,9 @@
 import customtkinter as ctk
-import pyaudio
-import wave
+import threading, pyaudio, wave, logging
 import os
 
-
+logging.basicConfig(filename='app.log', level=logging.INFO, 
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 class AudioRecorder:
     def __init__(self):
         self.root = ctk.CTk()
@@ -33,52 +33,56 @@ class AudioRecorder:
 
     def start_recording(self):
         if not self.is_recording:
-            print("Start Recording")
+            logging.info("Start Recording")
             self.is_recording = True
-            self.stream = self.pyaudio.open(format=self.format, channels=self.channels, rate=self.sample_rate, input=True, frames_per_buffer=self.chunk)
-            self.root.after(100, self.record)
-            self.stop_button.place(relx=0.5, rely=0.7, anchor=ctk.CENTER)
+            self.recording_thread = threading.Thread(target=self.record, daemon=True)
+            self.recording_thread.start()
+           
+            self.stop_button.place(relx=0.5, rely=0.5, anchor=ctk.CENTER)
             self.start_button.place_forget()
 
     def record(self):
-        if self.is_recording:
+        self.stream = self.pyaudio.open(format=self.format, channels=self.channels, rate=self.sample_rate, 
+                                        input=True, frames_per_buffer=self.chunk)
+        while self.is_recording:
             try:
-               data = self.stream.read(self.chunk, exception_on_overflow=False)
-               self.frames.append(data)
+                data = self.stream.read(self.chunk, exception_on_overflow=False)
+                self.frames.append(data)
             except IOError as e:
-                print(f"Input overflowed, ignoring this chunk. {e}")
-
-            self.root.after(100, self.record)
-        else: 
-            self.stop_recording()
+                logging.warning(f"Input overflowed, ignoring this chunk. {e}")
+            
+        self.stream.stop_stream()
+        self.stream.close()
 
     def stop_recording(self):
         self.is_recording = False
-        self.stream.stop_stream()
-        self.stream.close()
-        # self.pyaudio.terminate()
+        self.recording_thread.join()
 
-        self.start_button.place(relx=0.5, rely=0.5, anchor=ctk.CENTER)
-        self.stop_button.place_forget()
-       
         self.save_recording()
-    
-    def save_recording(self):
-        print(f"Total frames: {len(self.frames)}, Total data size: {sum(len(frame) for frame in self.frames)} bytes")
-
-        audio_dir = "src/audio"
-        os.makedirs(audio_dir, exist_ok=True)
-        file_path = os.path.join(audio_dir, "recording.wav")
-
-        wave_file = wave.open(file_path, 'wb')
-        wave_file.setnchannels(self.channels)
-        wave_file.setsampwidth(self.pyaudio.get_sample_size(self.format))
-        wave_file.setframerate(self.sample_rate)
-        wave_file.writeframes(b''.join(self.frames))
-        wave_file.close()
         self.frames=[]
 
 
+        self.start_button.place(relx=0.5, rely=0.5, anchor=ctk.CENTER)
+        self.stop_button.place_forget()
+    
+    def save_recording(self):
+
+        logging.info(f"Total frames: {len(self.frames)}, Total data size: {sum(len(frame) for frame in self.frames)} bytes")
+
+        try:
+            audio_dir = "src/audio"
+            os.makedirs(audio_dir, exist_ok=True)
+            file_path = os.path.join(audio_dir, "recording.wav")
+
+            with wave.open(file_path, 'wb') as wave_file:
+             wave_file.setnchannels(self.channels)
+             wave_file.setsampwidth(self.pyaudio.get_sample_size(self.format))
+             wave_file.setframerate(self.sample_rate)
+             wave_file.writeframes(b''.join(self.frames))
+             wave_file.close()
+             logging.info("File Saved")
+        except Exception as e:
+            logging.error(f"Error saving recording{e}")
 
 
 
