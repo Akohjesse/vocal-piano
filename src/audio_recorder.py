@@ -30,7 +30,6 @@ class AudioRecorder:
 
         self.root.mainloop()
 
-
     def start_recording(self):
         if not self.is_recording:
             logging.info("Start Recording")
