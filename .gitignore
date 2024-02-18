@@ -6,7 +6,6 @@ lib64/
 # Bytecode
 __pycache__/
 *.py[cod]
-
-
 # OS files
 .DS_Store
+*.log
