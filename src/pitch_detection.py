@@ -37,7 +37,27 @@ class Pitch_Detect:
         try:
           y, sr = librosa.load(self.path)
           pitches = self.getPitches(y, sr)
-          notes = [self.frequency_to_note(pitch) for pitch in pitches]
+          frame_dur = 512 / sr
+          raw_notes = [self.frequency_to_note(pitch) for pitch in pitches if pitch > 0]
+
+          notes = []
+          prev_note = None
+          note_duration = 0
+
+          for note in raw_notes:
+              if note == prev_note:
+                  note_duration +=1
+              else: 
+                  if prev_note is not None and note_duration * frame_dur >= 0.1:
+                      notes.append((prev_note, note_duration * frame_dur))
+                  prev_note = note
+                  note_duration = 1
+          if prev_note is not None and note_duration * frame_dur >= 0.1:
+              notes.append((prev_note, note_duration * frame_dur))
+              
           logging.info(notes)
         except Exception as e:
             logging.error(f"Error processing audio {e}")
+
+
+Pitch_Detect("/Users/jesseakoh/Desktop/Code/Python/vocal-piano/src/audio/recording.wav")
