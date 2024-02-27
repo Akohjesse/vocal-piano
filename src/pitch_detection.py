@@ -2,6 +2,7 @@ import librosa
 import numpy as np
 import os
 import logging
+from generate_midi import create_midi_from_notes
 
 logging.basicConfig(filename='app.log', level=logging.INFO, 
                     format='%(asctime)s - %(levelname)s - %(message)s')
@@ -25,6 +26,7 @@ class Pitch_Detect:
 
     @staticmethod
     def frequency_to_note(freq):
+        if freq <= 0: return "Silence"
         a4 = 440
         c0 = a4 * pow(2, -4.75)
         note_names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
@@ -54,8 +56,9 @@ class Pitch_Detect:
                   note_duration = 1
           if prev_note is not None and note_duration * frame_dur >= 0.1:
               notes.append((prev_note, note_duration * frame_dur))
-              
-          logging.info(notes)
+
+          midi_output = os.path.join("src/audio", "output.mid")
+          create_midi_from_notes(notes=notes, output_file=midi_output)
         except Exception as e:
             logging.error(f"Error processing audio {e}")
 
