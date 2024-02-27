@@ -64,6 +64,7 @@ class AudioRecorder:
 
         self.start_button.place(relx=0.5, rely=0.5, anchor=ctk.CENTER)
         self.stop_button.place_forget()
+        
         pitch_detection.Pitch_Detect("/Users/jesseakoh/Desktop/Code/Python/vocal-piano/src/audio/recording.wav")
     
     def save_recording(self):
