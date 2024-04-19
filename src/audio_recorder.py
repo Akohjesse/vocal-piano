@@ -1,7 +1,7 @@
 import customtkinter as ctk
 import threading, pyaudio, wave, logging
 import os
-import pitch_detection
+# import pitch_detection
 
 logging.basicConfig(filename='app.log', level=logging.INFO, 
                     format='%(asctime)s - %(levelname)s - %(message)s')
@@ -61,11 +61,9 @@ class AudioRecorder:
         self.save_recording()
         self.frames=[]
 
-
         self.start_button.place(relx=0.5, rely=0.5, anchor=ctk.CENTER)
         self.stop_button.place_forget()
         
-        pitch_detection.Pitch_Detect("/Users/jesseakoh/Desktop/Code/Python/vocal-piano/src/audio/recording.wav")
     
     def save_recording(self):
 
@@ -86,3 +84,6 @@ class AudioRecorder:
 
         except Exception as e:
             logging.error(f"Error saving recording{e}")
+
+if __name__ == "__main__":
+    AudioRecorder()
